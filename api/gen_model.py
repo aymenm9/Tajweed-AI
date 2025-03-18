@@ -71,3 +71,4 @@ def chatbot(message:str,chat_history:list = []):
     response = chat_session.send_message(message)
 
     return response.text
+
