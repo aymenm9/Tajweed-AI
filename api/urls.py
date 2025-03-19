@@ -8,5 +8,7 @@ urlpatterns = [
     path('quiz/', views.QuizViewSet.as_view()),
     path('quiz/<int:pk>/', views.QuizView.as_view()),
     path('chatbot/', views.ChatbotView.as_view()),
+    path('lessons/<int:pk>/', views.LessonsListView.as_view()),
+    path('lessons/', views.lessonsView.as_view()),
     
 ]

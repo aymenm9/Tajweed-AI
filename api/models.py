@@ -28,3 +28,14 @@ class ChatHistory(models.Model):
 
     def __str__(self):
         return f'{self.user}, {self.msg}'
+
+
+
+class Lesson(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='lessons')
+    title = models.CharField(max_length=200)
+    lesson_number = models.IntegerField()
+    content = models.TextField()
+    is_completed = models.BooleanField(default=False)
+    estimated_time = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)

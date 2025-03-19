@@ -1,13 +1,15 @@
 from rest_framework import generics
 from rest_framework.views import APIView
-from .serializer import UserSerializer, QuizSerializer, ChatHistorySerializer
+from .serializer import UserSerializer, QuizSerializer, ChatHistorySerializer, LessonSerializer, LessonTitleSerializer
 from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Quiz, ChatHistory
+from .models import Quiz, ChatHistory, Lesson
 
-from .gen_model import generate_quiz, chatbot
+from .gen_model import generate_quiz, chatbot, generate_lesson
+from .util import create_lesson_from_ai_response, get_lessons_titles
+
 # Create your views here.
 from django.http import JsonResponse
 
@@ -91,3 +93,24 @@ class ChatbotView(APIView):
         user.chat_history.msg = []
         user.chat_history.save()
         return Response({}, status=status.HTTP_200_OK)
+
+
+class lessonsView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        content = generate_lesson(request.data['user_data'])
+        create_lesson_from_ai_response(content,request.user)
+        lessons = get_lessons_titles(request.user)
+        serializer = LessonTitleSerializer(lessons, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def delete(self, request):
+        Lesson.objects.filter(user=request.user).delete()
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
+    
+
+class LessonsListView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+    lookup_field = 'pk'

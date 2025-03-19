@@ -39,7 +39,7 @@ def chatbot(message:str,chat_history:list = []):
     "top_p": 0.95,
     "top_k": 40,
     "max_output_tokens": 8192,
-    "response_mime_type": "text/plain",
+    "response_mime_type": "application/json",
     }
     model = genai.GenerativeModel(
     model_name="gemini-2.0-flash-lite",
@@ -72,3 +72,27 @@ def chatbot(message:str,chat_history:list = []):
 
     return response.text
 
+def generate_lesson(user_data):
+
+    # Create the model
+    generation_config = {
+      "temperature": 1,
+      "top_p": 0.95,
+      "top_k": 40,
+      "max_output_tokens": 8192,
+      "response_mime_type": "application/json",
+    }
+
+    model = genai.GenerativeModel(
+      model_name="gemini-2.0-flash-lite",
+      generation_config=generation_config,
+    )
+
+    response = model.generate_content([
+      "{\n  \"prompt\": {\n    \"task\": \"Generate personalized lessons for users learning to read and recite the Quran.\",\n    \"instructions\": [\n      \"Each lesson must include a title, content in markdown format optimized for display in a Flutter app, an estimated time to complete, and a lesson number.\",\n      \"Keep lesson titles short and concise to fit mobile app interfaces while remaining descriptive.\",\n      \"Structure the content for effective learning, incorporating key Tajweed concepts (e.g., pronunciation rules, articulation points, and recitation techniques).\",\n      \"Adapt lessons to the user's proficiency level (beginner, intermediate, advanced), preferred learning style (e.g., visual, auditory, kinesthetic), and specific focus areas (e.g., mastering specific rules, improving fluency).\",\n      \"Consider the user's Arabic language proficiency (`arabic_level`), general academic background (`academic_level`), and Sharia studies knowledge (`sharia_study_level`) to adjust lesson complexity, language support, and Islamic context.\",\n      \"Generate all lesson content, including titles, in the language specified by `lessons_language` (e.g., English, Arabic), ensuring accessibility and comprehension for the user.\",\n      \"When `lessons_language` is Arabic, use only Arabic throughout the lesson (titles, content, examples), avoiding English terms, transliteration, or translation unless explicitly required by the user's input.\",\n      \"If the user already understands a subject or Tajweed concept, include only a brief reminder or summary instead of a full lesson, ensuring efficiency and relevance.\",\n      \"Order the lessons sequentially from the most basic to the most advanced for progressive learning.\",\n      \"Include clear and relevant examples in each lesson to illustrate concepts, tailored to the user's learning style and proficiency level.\",\n      \"For lessons involving Tajweed concepts, provide specific examples from the Quran (e.g., verses or words) to demonstrate the application of rules, including Arabic text and, if applicable, transliteration or translation in the `lessons_language` only when it is not Arabic.\",\n      \"Output the lessons in the following JSON format: [{'lesson_number': 1, 'title': 'title of Lesson', 'content': 'markdown content for a Flutter app', 'estimated_time': 'n min'}, ...]\"\n    ],\n    \"context\": {\n      \"app_name\": \"tajweed-ai\",\n      \"subject\": \"Learning how to read and recite the Quran\"\n    },\n    \"output_format\": \"JSON\"\n  }\n}",
+      "input: user_data: \{user_data\}",
+      "output: [{'lesson_number': int , 'title': 'title of Lesson', 'content': 'markdown content for a Flutter app', 'estimated_time': 'n min'}]",
+      "input: user_data: {user_data}",
+      "output: ",
+    ])
+    return json.loads(response.to_dict()['candidates'][0]['content']['parts'][0]['text'])
