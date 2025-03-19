@@ -39,3 +39,7 @@ class Lesson(models.Model):
     is_completed = models.BooleanField(default=False)
     estimated_time = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
+
+class Goals(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='goals')
+    data = models.JSONField()

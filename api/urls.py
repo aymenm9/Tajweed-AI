@@ -10,5 +10,6 @@ urlpatterns = [
     path('chatbot/', views.ChatbotView.as_view()),
     path('lessons/<int:pk>/', views.LessonsListView.as_view()),
     path('lessons/', views.lessonsView.as_view()),
+    path('goals/', views.GoalsView.as_view()),
     
 ]

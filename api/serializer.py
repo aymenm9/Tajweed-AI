@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Quiz, Lesson
-from .models import ChatHistory
+from .models import ChatHistory, Goals
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,4 +34,11 @@ class LessonTitleSerializer(serializers.ModelSerializer):
 class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
+        fields = '__all__'
+
+
+
+class GoalsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Goals
         fields = '__all__'
