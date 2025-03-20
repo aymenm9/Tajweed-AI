@@ -129,41 +129,20 @@ def choise_verse(tajweed_focus_rule='all'):
         generation_config=generation_config,
     )
 
-    prompt = f"""
-    {{
-        "prompt": {{
-            "task": "Provide a Quranic verse that exemplifies the Tajweed rule: '{tajweed_focus_rule}'.",
-            "instructions": [
-                "Identify a verse from the Quran that demonstrates the specified Tajweed rule.",
-                "Return the sura number, aya number, and the verse text in Quranic Arabic script.",
-                "Output all text in Arabic.",
-                "Format the output as a JSON object containing the sura, aya, and verse."
-            ],
-            "context": {{
-                "app_name": "tajweed-example-finder",
-                "subject": "Finding Quranic verses for Tajweed rules"
-            }},
-            "output_format": "JSON"
-        }}
-    }}
-    """
-
-    response = model.generate_content(prompt)
-
-    try:
-        json_response = json.loads(response.text)
-        result = json_response[0] # load the list then get the first item.
-        print(result)
-        return result
-    except json.JSONDecodeError as e:
-        print(f"Error decoding JSON: {e}")
-        print(f"Response text: {response.text}") # Print the response for debugging
-        return None
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return None
 
 
+    response = model.generate_content([
+            f"""
+                task:
+                 اريد منك اعطائي آية واحدة فقط من القران التي تحتوي على مثال للحكم من احكام التجويد ومن الافضل ان تكون آية قصيرة
+               focus_area: tajweed_focus_rule
+               """,
+            "input: focus_area: tajweed_focus_rule",
+            """output:\{"sura": sura_number, "aya" : aya_number, "verse" : "verse in arabic",\}""",
+            f"input: focus_area: {tajweed_focus_rule}",
+            "output: ",
+        ])
+    return json.loads(response.to_dict()['candidates'][0]['content']['parts'][0]['text'])
 
 def recitationCorrection(sura: int, aya: int, verse: str, user_audio_base64: str, tajweed_rule='all'):
     # Create the model
@@ -176,13 +155,13 @@ def recitationCorrection(sura: int, aya: int, verse: str, user_audio_base64: str
     }
 
     model = genai.GenerativeModel(
-        model_name="gemini-2.0-flash",
+        model_name="gemini-1.5-flash",
         generation_config=generation_config,
     )
 
     
     response = model.generate_content([
-    f""" task: Analyze a user's Quran recitation based on a provided verse and Tajweed rules.,\n        instructions:\n            You will receive the following information:\n            - Sura Number: {sura},\n            - Aya Number: {aya},\n            - Verse Text (Arabic): {verse},\n            - User's Recitation (Base64 Encoded Audio): {user_audio_base64}'.\n            - Tajweed Focus Rule: {tajweed_rule} (or 'all' for general analysis),\n            Your task is to analyze the user's recitation based on this information.\n            Specifically, you should:\n            1. Attempt to identify any deviations in pronunciation, articulation, or application of Tajweed rules based on the base64 audio and the provided verse,\n            2. Focus on the specified Tajweed rule ({tajweed_rule}) if provided, or analyze all relevant rules if 'all' is given,\n            3. If possible, identify specific words where errors occur,\n\n            4. Classify each identified mistake (if any) as 'خطأ في النطق', 'قصر الممد بدلاً من المد', 'تجاوز قاعدة التجويد', etc., and assign a severity: 'صغير' (minor), 'متوسط' (medium), or 'كبير' (major),                                                         \n            5. give the user a score on int/100.                         \n           6. be strict in your evaluation.                         \n            7. Return the analysis as a JSON object with the following structure:\n        "sura\": {sura}, \"aya\": {aya}, \"verse\": \"{verse}\", \"errors\": ["mistake_word\": \"word with mistake in the verse\", \"mistake_type\": \"نوع الخطأ بالعربية\", \"severity\": \"\",...], \"score\": int \n            8. If no mistakes are detected, return an empty 'errors' list and a confirmation message in Arabic: 'القراءة صحيحة',\n            8. All text in the response must be in Arabic\n        context :\n            app_name : quran-recitation-corrector,\n            subject: Analyzing Quran recitation with Tajweed rules,\n        output_format: JSON """,
+    f""" task: Analyze a user's Quran recitation based on a provided verse ,\n instructions:\n You will receive :\n - Sura Number,\n - Aya Number,\n - Verse Text (Arabic),\n - User's Recitation (Base64 Encoded Audio)'.\n - Tajweed Focus Rule(or 'all' for general analysis),\n Your task is to analyze the user's recitation based on this information.\n Specifically, you should:\n 1. Attempt to identify any deviations in pronunciation, articulation, or application of Tajweed rules based on the base64 audio and the provided verse,\n 2. Focus on the specified Tajweed rule ({tajweed_rule}) if provided, or analyze all relevant rules if 'all' is given,\n 3. If possible, identify specific words where errors occur,\n 4. Classify each identified mistake (if any) as 'خطأ في النطق', 'قصر الممد بدلاً من المد', 'تجاوز قاعدة التجويد', etc., and assign a severity: 'صغير' (minor), 'متوسط' (medium), or 'كبير' (major), \n 5. give the user a score on int/100.\n 6. be strict in your evaluation.\n 7. Return the analysis as a JSON object with the following structure:\n "sura\": sura_number, \"aya\": aya_number, \"verse\": \"the verse in arbic\", \"errors\": ["mistake_word\": \"word with mistake in the verse\", \"mistake_type\": \"نوع الخطأ بالعربية\", \"severity\": \"\",...], \"score\": int \n 8. If no mistakes are detected, return an empty 'errors' list and a confirmation message in Arabic: 'القراءة صحيحة',\n 9. All text in the response must be in Arabic\n context :\n app_name : quran-recitation-corrector,\n subject: Analyzing Quran recitation with Tajweed rules,\noutput_format: JSON """,
     "input: sura: int , aya:int, verse : the verse in Arabic , Base64 Encoded : Audiouser_audio_base64 , Tajweed Focus Rule: tajweed_rule",
     "output: {\"sura\": int , \"aya\":int, \"verse\":\"the verse in Arabic\", \"errors\": [{\"word\": \"word \nwith mistake\", \"mistake_type\": \"نوع الخطأ بالعربية\", \"severity\": \"\"}], \n\"score\": score}",
     f"input: sura : {sura}, aya : {aya}, verse : {verse}, Base64 Encoded : {user_audio_base64} , Tajweed Focus Rule: {tajweed_rule}",
