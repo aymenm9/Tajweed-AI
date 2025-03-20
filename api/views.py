@@ -158,7 +158,7 @@ class VerseView(APIView):
         '''
             use Gemini to get a verse to be recited
         '''
-        response = choise_verse(topic)
+        response = choise_verse(topic)[0]
         return Response(response, status=status.HTTP_200_OK)
 
 
