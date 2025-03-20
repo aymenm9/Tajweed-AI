@@ -1,13 +1,13 @@
 from rest_framework import generics
 from rest_framework.views import APIView
-from .serializer import UserSerializer, QuizSerializer, ChatHistorySerializer, LessonSerializer, LessonTitleSerializer, GoalsSerializer
+from .serializer import UserSerializer, QuizSerializer, ChatHistorySerializer, LessonSerializer, LessonTitleSerializer, GoalsSerializer, RecitationCorrectionSerializer, RecitationCorrectionSerializerOutput
 from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Quiz, ChatHistory, Lesson, Goals
 
-from .gen_model import generate_quiz, chatbot, generate_lesson
+from .gen_model import generate_quiz, chatbot, generate_lesson, recitationCorrection, choise_verse
 from .util import create_lesson_from_ai_response, get_lessons_titles
 
 # Create your views here.
@@ -154,10 +154,43 @@ class GoalsView(APIView):
 class VerseView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, topic):
+    def get(self, request, topic='all'):
         '''
             use Gemini to get a verse to be recited
         '''
+        response = choise_verse(topic)
+        return Response(response, status=status.HTTP_200_OK)
+
+
+import base64
 
 class RecitationCorrectionView(APIView):
     permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        data = RecitationCorrectionSerializer(data=request.data)
+        if not data.is_valid():
+            return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        audio_file = data.validated_data['audio']
+        audio = audio_file.read()
+        audio_base64 = base64.b64encode(audio).decode('utf-8')
+
+        response = recitationCorrection(data.validated_data['sura'],data.validated_data['aya'],data.validated_data['verse'],audio_base64)
+        #serailizer = RecitationCorrectionSerializerOutput(response)
+        return Response(response, status=status.HTTP_200_OK)
+    
+
+from django.db.models import Count, F
+class QuizStatsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        toatal_quizes = Quiz.objects.filter(user=user).count()
+        correct_quizes = Quiz.objects.filter(user=user,answer=F('user_answer')).count()
+
+        return Response({'total_quizes':toatal_quizes,'correct_quizes':correct_quizes}, status=status.HTTP_200_OK)
+
+
+

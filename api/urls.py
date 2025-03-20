@@ -11,5 +11,8 @@ urlpatterns = [
     path('lessons/<int:pk>/', views.LessonsListView.as_view()),
     path('lessons/', views.lessonsView.as_view()),
     path('goals/', views.GoalsView.as_view()),
+    path('recitation_correction/', views.RecitationCorrectionView.as_view()),
+    path('get_verse/<str:topic>/', views.VerseView.as_view()),
+    path('quiz_stats/', views.QuizStatsView.as_view()),
     
 ]

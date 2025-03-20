@@ -42,3 +42,19 @@ class GoalsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Goals
         fields = '__all__'
+
+
+class RecitationCorrectionSerializer(serializers.Serializer):
+
+    audio = serializers.FileField()
+    sura = serializers.IntegerField()
+    aya = serializers.IntegerField()
+    verse = serializers.CharField()
+
+class RecitationCorrectionSerializerOutput(serializers.Serializer):
+
+    sura = serializers.IntegerField()
+    aya = serializers.IntegerField()
+    verse = serializers.CharField()
+    errors = serializers.JSONField()
+    tajweed_focus_rule = serializers.CharField(default='all')
